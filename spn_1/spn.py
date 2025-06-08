@@ -5,11 +5,11 @@ cp.random.seed(42)
 
 
 class SPN:
-    def __init__ (self, num_nodes, input_size, output_size):
+    def __init__ (self, input_features, total_nodes, output_nodes):
         self.weights = None
-        self.output_size = output_size
-        self.input_size = input_size
-        self.num_nodes = num_nodes
+        self.output_size = output_nodes
+        self.input_size = input_features
+        self.num_nodes = total_nodes
         self.input_features_to_remove = None
 
     def compile(self):
@@ -202,6 +202,9 @@ class SPN:
             X_train = X_train[~self.input_features_to_remove, :]
             X_val = X_val[~self.input_features_to_remove, :]
         
+        train_metrics = []
+        val_metrics = []
+
         t = 1 #timestep
         val_loss = 0
         val_accuracy = 0
@@ -220,9 +223,11 @@ class SPN:
             val_loss = cp.mean(SPN.categorical_crossentropy(final_output, Y_val))
             val_accuracy = cp.mean(SPN.caclulate_accuracy(final_output, Y_val))
 
-            print(f"Epoch: {i + 1} Total Time: {cp.sum(metrics[:, 0]):.4f} Average Time per batch: {cp.mean(metrics[:, 0]):.4f} Train Accuracy: {metrics[-1, 2]:.4f} Train Loss: {metrics[-1, 1]:.4f} Val Accuracy: {val_accuracy:.4f} Val Loss: {val_loss:.4f}")
-        
-        return val_loss, val_accuracy
+            print(f"Epoch: {i + 1} Total_Time: {cp.sum(metrics[:, 0]):.4f} Average_Time_per_batch: {cp.mean(metrics[:, 0]):.4f} Train_Accuracy: {metrics[-1, 2]:.4f} Train_Loss: {metrics[-1, 1]:.4f} Val_Accuracy: {val_accuracy:.4f} Val_Loss: {val_loss:.4f}")
+            train_metrics.append(metrics)
+            val_metrics.append([val_loss, val_accuracy])
+
+        return train_metrics, val_metrics
 
     def test(self, X_test, Y_test):
 
@@ -234,7 +239,9 @@ class SPN:
         test_loss = cp.mean(SPN.categorical_crossentropy(final_output, Y_test))
         test_accuracy = cp.mean(SPN.caclulate_accuracy(final_output, Y_test))
 
-        print("Test Accuracy: ", test_accuracy, "Test Loss: ", test_loss)
+        print("Test_Accuracy: ", test_accuracy, "Test_Loss: ", test_loss)
+        return [test_loss, test_accuracy]
+
 
     def prune_by_percent_once(percent, mask, final_weight):
         # Put the weights that aren't masked out in sorted order.

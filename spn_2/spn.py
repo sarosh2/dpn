@@ -44,13 +44,13 @@ class SPNAutoGrad(autograd.Function):
         batch_size = input.shape[0]
 
         #temp d_output tensor saves output gradients for each neuron as they're calculated
-        d_output = torch.zeros(batch_size, nodes).to(input.device)
+        d_output = input.new_zeros(batch_size, nodes)
         d_output[:, -output_size:] = grad_output
 
         d_weights = []
 
         #go through weight blocks except the first one in reverse
-        for i in range(len(weights) - 1, 0, -1):
+        for i in reversed(range(1, len(weights))):
             
             #get relavent indices for the input of the current block
             input_start_idx = nodes - weights[i - 1].shape[0]
@@ -75,42 +75,67 @@ class SPNAutoGrad(autograd.Function):
         return d_input, None, d_biases, *d_weights
 
 class SPN(nn.Module):
-    def __init__ (self, num_nodes, input_size, output_size, use_min_weights = True):
+    def __init__ (self, input_features, total_nodes, output_nodes, use_min_weights = True, device=None):
         super(SPN, self).__init__()
         self.weights = nn.ParameterList()
-        self.output_size = output_size
-        self.input_size = input_size
-        self.num_nodes = num_nodes
-
-        weight_list, biases = SPN.get_weights(self.num_nodes, self.input_size, use_min_weights)
-        self.weights.extend(weight_list)
-        self.biases = biases
+        self.output_nodes = output_nodes
+        self.input_features = input_features
+        self.total_nodes = total_nodes
+        self.use_min_weights = use_min_weights
+        self.device = device if device else torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     def compile(self):
         if len(self.weights) == 0:
-            weight_list, biases = SPN.get_weights(self.num_nodes, self.input_size)
+            weight_list, biases = SPN.get_weights(self.total_nodes, self.input_features, self.output_nodes, self.use_min_weights, self.device)
             self.weights.extend(weight_list)
             self.biases = biases
 
     @staticmethod
-    def get_weights(n, X):
+    def get_weights(n, X, output_size, min_blocks, device):
         #n: number of neurons
         #X: input size
+        #min_blocks: Bool to determine whether to calculate minimum number of possible blocks or maximum
+
+        #CALCULATE MINIMUM BLOCKS
+        if min_blocks:
+            weights = []
+            if n == output_size: #if all the neurons are output neurons, create one block
+                std_dev = torch.sqrt(torch.tensor(2 / X, dtype=torch.float)).to(device)
+                weights.append(nn.Parameter(torch.randn(n, X).to(device) * std_dev))
+
+            else: #if there are more neurons than output size, create two blocks
+
+                std_dev = torch.tensor([2 / X, 2 / (X + n - output_size)], dtype=torch.float32)
+                std_dev = torch.sqrt(std_dev).to(device)
+
+                #First Block
+                w1 = torch.randn(n, X).to(device)
+                w1[:-output_size , :] *= std_dev[0]
+                w1[-output_size: , :] *= std_dev[1]
+                weights.append(nn.Parameter(w1))
+
+                #Second Block
+                weights.append(nn.Parameter(torch.randn(output_size, n - output_size).to(device) * std_dev[1]))
+
+            biases = nn.Parameter(torch.empty(n).uniform_(0.0, 1.0)).to(device)
+            return weights, biases
+
+        #CALCULATE MAXIMUM BLOCKS
 
         #the first block has X features, the following blocks will have only 1
 
         std_dev = torch.arange(X, X + n).view(-1, 1)
-        std_dev = torch.sqrt(2 / std_dev)
+        std_dev = torch.sqrt(2 / std_dev).to(device)
 
-        weights = [nn.Parameter(torch.randn(n, X) * std_dev)]
-        biases = nn.Parameter(torch.empty(n).uniform_(0.0, 1.0))
+        weights = [nn.Parameter(torch.randn(n, X).to(device) * std_dev)]
+        biases = nn.Parameter(torch.empty(n).uniform_(0.0, 1.0)).to(device)
 
         #initialize weights for the rest of the blocks
         for i in range(n - 1, 0, -1):
-            weights.append(nn.Parameter(torch.randn(i, 1) * std_dev[-i:]))
+            weights.append(nn.Parameter(torch.randn(i, 1).to(device) * std_dev[-i:]))
 
         return weights, biases
     
     def forward(self, x):
 
-        return SPNAutoGrad.apply(x, self.output_size, self.biases, *list(self.weights))
+        return SPNAutoGrad.apply(x, self.output_nodes, self.biases, *list(self.weights))

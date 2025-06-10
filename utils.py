@@ -1,14 +1,14 @@
 import torch
 import time
 
-def evaluate(model, dataloader, criterion):
+def evaluate(model, dataloader, criterion, flatten=True):
     model.eval()
     correct = 0
     total = 0
     loss_sum = 0
     with torch.no_grad():
         for x_batch, y_batch in dataloader:
-            x_batch, y_batch = x_batch.view(x_batch.size(0), -1).cuda(), y_batch.cuda()
+            x_batch, y_batch = x_batch.view(x_batch.size(0), -1).cuda() if flatten else x_batch.cuda(), y_batch.cuda()
             outputs = model(x_batch)
             loss = criterion(outputs, y_batch)
             loss_sum += loss.item() * y_batch.size(0)
@@ -18,7 +18,7 @@ def evaluate(model, dataloader, criterion):
             total += y_batch.size(0)
     return loss_sum / total, correct / total
 
-def train(model, train_loader, val_loader, test_loader, epochs, optimizer, criterion):
+def train(model, train_loader, val_loader, test_loader, epochs, optimizer, criterion, flatten=True):
     train_metrics = []  # list of (time_per_batch, loss, accuracy) per batch
     val_metrics = []    # list of (val_loss, val_accuracy) per epoch
     test_metrics = []   # list of (test_loss, test_accuracy)
@@ -32,7 +32,7 @@ def train(model, train_loader, val_loader, test_loader, epochs, optimizer, crite
         batch_times = []
 
         for x_batch, y_batch in train_loader:
-            x_batch, y_batch = x_batch.view(x_batch.size(0), -1).cuda(), y_batch.cuda()
+            x_batch, y_batch = x_batch.view(x_batch.size(0), -1).cuda() if flatten else x_batch.cuda(), y_batch.cuda()
             optimizer.zero_grad()
 
             batch_start = time.time()
@@ -68,7 +68,7 @@ def train(model, train_loader, val_loader, test_loader, epochs, optimizer, crite
             print(f"Validation_Accuracy: {val_acc:.4f} Validation_Loss: {val_loss:.4f}", end='')
         
     # Finally test
-    test_loss, test_acc = evaluate(model, test_loader, criterion)
+    test_loss, test_acc = evaluate(model, test_loader, criterion, flatten)
     test_metrics.append((test_loss, test_acc))
 
     print("")

@@ -1,3 +1,22 @@
-# Denser Perceptron Networks (DPN)
+# Denser Perceptron Networks (DPNs)
 
-A framework for training layer-less, sequential, fully connected neural network architectures
+## Overview
+
+This repository contains the code for the **Denser Perceptron Networks (DPNs)** project, a neural network framework that aims to improve the connectivity and flexibility of neurons in a perceptron network. DPNs remove the typical constraints on neuron connections to form directed acyclic graphs (DAGs), allowing for richer feature learning with reduced space and time complexities.
+
+The framework introduces several approaches to optimize DPNs, including **Object-based Representation**, **Sequential Representation**, and **Block-based Representation**, each with varying complexity and trade-offs.
+
+## Key Features
+
+- **Denser Connectivity**: Allows neurons to form unrestricted connections.
+- **Optimized Time and Space Complexity**: Various approaches to improve efficiency, from **Maximal DPNs** to **Minimal DPNs** and **Pruning Techniques**.
+- **Flexible Architecture**: Neurons are treated as individual objects that can independently process inputs, enhancing parallelization.
+
+## Setup and Installation
+
+1. Clone this repository:
+   ```bash
+   git clone https://github.com/yourusername/dpn-project.git
+   cd dpn-project
+
+Project Report: [./docs/DPNs-thesis_report_draft_sarosh_krishan.pdf]

@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-
+from dpn_3.dpn import DPN
 class Patch_Embedding(nn.Module):
     """Patch Embedding layer is nothing but a convolutional layer
        with kernelsize and stride equal to patch size."""

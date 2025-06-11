@@ -19,4 +19,5 @@ The framework introduces several approaches to optimize DPNs, including **Object
    git clone https://github.com/yourusername/dpn-project.git
    cd dpn-project
 
+For a detailed explanation of the methodology, approaches, and results, please refer to the project report available in PDF format:
 [Project Report](./docs/DPNs-thesis_report_draft_sarosh_krishan.pdf)

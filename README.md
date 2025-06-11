@@ -10,14 +10,6 @@ The framework introduces several approaches to optimize DPNs, including **Object
 
 - **Denser Connectivity**: Allows neurons to form unrestricted connections.
 - **Optimized Time and Space Complexity**: Various approaches to improve efficiency, from **Maximal DPNs** to **Minimal DPNs** and **Pruning Techniques**.
-- **Flexible Architecture**: Neurons are treated as individual objects that can independently process inputs, enhancing parallelization.
-
-## Setup and Installation
-
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/yourusername/dpn-project.git
-   cd dpn-project
 
 For a detailed explanation of the methodology, approaches, and results, please refer to the project report available in PDF format:
 [Project Report](./docs/DPNs-thesis_report_draft_sarosh_krishan.pdf)

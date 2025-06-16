@@ -24,7 +24,7 @@ class DPN(nn.Module):
             # Optional: apply nonlinearity, e.g. ReLU
             h1 = F.relu(h1)
             # Concatenate input and h1 along the feature dimension
-            concat = torch.cat([x, h1], dim=1)
+            concat = torch.cat([x, h1], dim=-1)
             out = self.layer2(concat)
             return out
         else:
@@ -33,6 +33,6 @@ class DPN(nn.Module):
                 out = self.layers[node](x)
                 if node < hidden_nodes:
                     out = F.relu(out)
-                x = torch.cat([x, out], dim=1)
+                x = torch.cat([x, out], dim=-1)
 
             return x[:, -self.output_nodes:]

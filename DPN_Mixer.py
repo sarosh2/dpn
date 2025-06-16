@@ -14,15 +14,9 @@ class Patch_Embedding(nn.Module):
 class MLP(nn.Module):
     """This network applies 2 consecutive fully connected layers and is used
        in Token Mixer and Channel Mixer modules."""
-    def __init__(self, dim, intermediate_dim, dropout = 0.):
+    def __init__(self, dim, intermediate_dim):
         super().__init__()
-        self.mlp = nn.Sequential(
-            nn.Linear(dim, intermediate_dim),
-            nn.GELU(),
-            nn.Dropout(dropout),
-            nn.Linear(intermediate_dim, dim),
-            nn.Dropout(dropout)
-        )
+        self.mlp = DPN(dim, intermediate_dim + dim, dim, True)
 
     def forward(self, x):
         return self.mlp(x)
@@ -52,19 +46,19 @@ class MixerLayer(nn.Module):
        in addition to skip connections.
        intermediate_output = Token Mixer(input) + input
        final_output = Channel Mixer(intermediate_output) + intermediate_output"""
-    def __init__(self, embedding_dim, num_patch, token_intermediate_dim, channel_intermediate_dim, dropout = 0.):
+    def __init__(self, embedding_dim, num_patch, token_intermediate_dim, channel_intermediate_dim):
         super().__init__()
 
         self.token_mixer = nn.Sequential(
             nn.LayerNorm(embedding_dim),
             T1(),
-            MLP(num_patch, token_intermediate_dim, dropout),
+            MLP(num_patch, token_intermediate_dim),
             T1()
         )
 
         self.channel_mixer = nn.Sequential(
             nn.LayerNorm(embedding_dim),
-            MLP(embedding_dim, channel_intermediate_dim, dropout),
+            MLP(embedding_dim, channel_intermediate_dim),
         )
 
     def forward(self, x):
@@ -90,7 +84,7 @@ class MLPMixer(nn.Module):
             T2(),
         )
 
-        self.mixers = nn.ModuleList([MixerLayer(embedding_dim, self.num_patch, token_intermediate_dim, channel_intermediate_dim) for _ in range(depth)])
+        self.mixers = nn.ModuleList([MixerLayer(embedding_dim, self.num_patch, token_intermediate_dim * depth // 3, channel_intermediate_dim * depth // 3) for _ in range(3)])
         self.layer_norm = nn.LayerNorm(embedding_dim)
         self.classifier = nn.Sequential(nn.Linear(embedding_dim, num_classes))
 

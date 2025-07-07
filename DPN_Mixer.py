@@ -84,7 +84,7 @@ class MLPMixer(nn.Module):
             T2(),
         )
 
-        self.mixers = nn.ModuleList([MixerLayer(embedding_dim, self.num_patch, token_intermediate_dim * depth // 3, channel_intermediate_dim * depth // 3) for _ in range(3)])
+        self.mixers = nn.ModuleList([MixerLayer(embedding_dim, self.num_patch, token_intermediate_dim * depth // 2, channel_intermediate_dim * depth // 2) for _ in range(2)])
         self.layer_norm = nn.LayerNorm(embedding_dim)
         self.classifier = nn.Sequential(nn.Linear(embedding_dim, num_classes))
 

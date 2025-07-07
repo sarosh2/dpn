@@ -124,11 +124,13 @@ class DPN(nn.Module):
 
         #the first block has X features, the following blocks will have only 1
 
+
         std_dev = torch.arange(X, X + n).view(-1, 1)
         std_dev = torch.sqrt(2 / std_dev).to(device)
 
-        weights = [nn.Parameter(torch.randn(n, X).to(device) * std_dev)]
         biases = nn.Parameter(torch.empty(n).uniform_(0.0, 1.0)).to(device)
+
+        weights = [nn.Parameter(torch.randn(n, X).to(device) * std_dev)]
 
         #initialize weights for the rest of the blocks
         for i in range(n - 1, 0, -1):

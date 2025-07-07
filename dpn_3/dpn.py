@@ -32,7 +32,7 @@ class DPN(nn.Module):
             for node in range(self.total_nodes):
                 out = self.layers[node](x)
                 if node < hidden_nodes:
-                    out = F.relu(out)
+                    out = F.gelu(out)
                 x = torch.cat([x, out], dim=-1)
 
             return x[:, -self.output_nodes:]
